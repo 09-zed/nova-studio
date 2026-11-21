@@ -193,7 +193,7 @@ img,svg{display:block}
 .board p{font-size:clamp(10px,2.3cqw,14px);color:var(--muted);line-height:1.35}
 .board p strong{color:var(--ink)}
 .board .btn{font-size:clamp(12px,2.3cqw,14px);padding:1.4cqw 3.4cqw;min-height:0}
-@container (max-width:460px){.board p{display:none}.board{gap:2cqw;padding-top:1cqw}.board h2{font-size:6.6cqw}.board .btn{font-size:13px;padding:8px 14px;min-height:36px}}
+@container (max-width:460px){.board p{display:none}.board{gap:0;justify-content:center;padding:0 5cqw 22px}.board h2{font-size:6cqw;line-height:1}.board .btn{position:absolute;top:calc(100% - 22px);left:50%;translate:-50% 0;white-space:nowrap;font-size:14px;padding:11px 20px;min-height:44px}}
 
 /* Footer */
 .footer{background:var(--navy);color:#fff;text-align:center;padding:40px 24px 0;margin:0 20px;position:relative}
@@ -278,7 +278,6 @@ p{text-wrap:pretty}
   .foot-links{gap:0 6px}
   .foot-links a{padding-inline:8px}
 }
-@container (max-width:460px){.board .btn{min-height:44px}}
 
 /* Responsive */
 @media (max-width:900px){
@@ -311,6 +310,5 @@ img.img-fail{opacity:0}
 .is-empty{display:none!important}
 .carousel.single .car-ctrl{display:none}
 /* Panneau de l'appel : sous 360 px, le bouton passe sous le panneau (décision C) */
-@container (max-width:330px){.board .btn{position:absolute;top:calc(100% + 6px);left:50%;translate:-50% 0}.board{justify-content:center}}
 /* Logo du pied de page sur petit écran (break-ui 6) */
 @media (max-width:900px){.big-logo img{width:92px}.big-logo span{font-size:clamp(40px,13vw,60px)}}
