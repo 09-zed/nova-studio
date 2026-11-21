@@ -1,14 +1,22 @@
 const nav = document.getElementById('nav');
-// Loader puis entrée du hero (le seul moment orchestré)
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let started = false;
-function start() {
-  if (started) return; started = true;
-  document.getElementById('loader').classList.add('done');
-  document.documentElement.classList.add('ready');
+
+// Images introuvables : on masque l'image ; les avatars reçoivent une initiale à la place
+const FALLBACK_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="#141c5c"/><text x="20" y="26" font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="#d8ff3c" text-anchor="middle">N</text></svg>');
+function onImgFail(img) {
+  if (img.matches('.avatar, .head') && !img.src.startsWith('data:')) { img.src = FALLBACK_AVATAR; return; }
+  img.classList.add('img-fail');
 }
-addEventListener('load', () => setTimeout(start, reduced ? 0 : 250));
-setTimeout(start, 2500); // filet de sécurité si une ressource traîne
+document.querySelectorAll('img').forEach(img => {
+  img.addEventListener('error', () => onImgFail(img));
+  if (img.complete && img.naturalWidth === 0 && img.getAttribute('src')) onImgFail(img);
+});
+
+// Entrée de la bannière (le seul moment orchestré) : dès que les polices sont prêtes, sans écran de chargement
+let started = false;
+function start() { if (!started) { started = true; document.documentElement.classList.add('ready'); } }
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(start);
+setTimeout(start, 600); // filet de sécurité si une police traîne
 
 // Menu mobile
 const menuBtn = document.getElementById('menuBtn');
@@ -16,6 +24,7 @@ function setMenu(open) {
   nav.classList.toggle('open', open);
   menuBtn.setAttribute('aria-expanded', open);
   menuBtn.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
+  if (open) nav.classList.remove('is-hidden');
 }
 menuBtn.addEventListener('click', () => setMenu(!nav.classList.contains('open')));
 document.querySelectorAll('#mainNav a').forEach(a => a.addEventListener('click', () => setMenu(false)));
@@ -26,58 +35,60 @@ addEventListener('keydown', e => {
   requestAnimationFrame(() => requestAnimationFrame(() => nav.classList.remove('instant')));
 });
 
-// Nav au scroll + lien actif
+// Barre de navigation : remonte hors de l'écran quand on descend, revient dès qu'on remonte
 const links = [...document.querySelectorAll('.nav nav a')];
 const sections = links.map(a => document.querySelector(a.getAttribute('href')));
-addEventListener('scroll', () => {
-  nav.classList.toggle('scrolled', scrollY > 20);
+let lastY = scrollY, ticking = false;
+function onScroll() {
+  const y = scrollY, delta = y - lastY;
+  nav.classList.toggle('scrolled', y > 20);
+  const keepVisible = y < 120 || nav.classList.contains('open') || nav.contains(document.activeElement);
+  if (keepVisible || delta < -6) nav.classList.remove('is-hidden');
+  else if (delta > 6) nav.classList.add('is-hidden');
+  if (Math.abs(delta) > 6 || keepVisible) lastY = y;
   let cur = -1;
   sections.forEach((s, i) => { if (s && s.getBoundingClientRect().top < innerHeight * 0.4) cur = i; });
   links.forEach((a, i) => a.classList.toggle('active', i === cur));
-}, { passive: true });
-
-// Compteurs
-const fmt = (n, dec) => n.toLocaleString('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
-function count(el) {
-  const target = parseFloat(el.dataset.count), suffix = (el.dataset.suffix || '').replace(' ', '\u00a0');
-  const dec = (el.dataset.count.split('.')[1] || '').length;
-  if (reduced) { el.textContent = fmt(target, dec) + suffix; return; }
-  const t0 = performance.now(), dur = 1200;
-  const step = t => {
-    const p = Math.min((t - t0) / dur, 1), e = 1 - Math.pow(1 - p, 3);
-    el.textContent = fmt(target * e, dec) + suffix;
-    if (p < 1) requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
+  ticking = false;
 }
-// Les chiffres comptent une seule fois quand la grille arrive à l'écran (valeurs finales déjà dans le HTML)
-const stats = document.querySelector('.stats');
-if (stats) new IntersectionObserver((es, o) => es.forEach(e => {
-  if (!e.isIntersecting) return;
-  stats.querySelectorAll('[data-count]').forEach(count); o.disconnect();
-}), { threshold: 0.3 }).observe(stats);
+addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+nav.addEventListener('focusin', () => nav.classList.remove('is-hidden'));
 
 // Tête qui surgit du bord quand la zone d'appel arrive
 const peek = document.querySelector('.peek');
-if (peek) new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting) { peek.classList.add('in'); o.disconnect(); } }), { threshold: .6 }).observe(document.querySelector('.call'));
+const call = document.querySelector('.call');
+if (peek && call) new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting) { peek.classList.add('in'); o.disconnect(); } }), { threshold: .6 }).observe(call);
+
+// Blocs sans contenu : on les masque plutôt que d'afficher un titre au-dessus du vide
+const stats = document.querySelector('.stats');
+if (stats && !stats.children.length) stats.classList.add('is-empty');
+const chatItems = document.querySelectorAll('.chat details');
+if (!chatItems.length) document.getElementById('faq')?.classList.add('is-empty');
 
 // Carrousel vidéos
-const track = document.querySelector('.track');
-const items = [...track.children];
-const dots = document.querySelector('.dots');
-items.forEach(() => dots.appendChild(document.createElement('i')));
-const updateDots = () => {
-  const i = Math.round(track.scrollLeft / (items[0].offsetWidth + 22));
-  [...dots.children].forEach((d, j) => d.classList.toggle('on', j === i));
-};
-track.addEventListener('scroll', updateDots, { passive: true });
-updateDots();
-document.querySelectorAll('.arrow').forEach(b => b.addEventListener('click', () =>
-  track.scrollBy({ left: +b.dataset.dir * (items[0].offsetWidth + 22), behavior: reduced ? 'auto' : 'smooth' })));
+const carousel = document.getElementById('carousel');
+const track = carousel?.querySelector('.track');
+const items = track ? [...track.children] : [];
+if (!items.length) {
+  carousel?.classList.add('is-empty');
+  document.querySelector('.videos-title')?.classList.add('is-empty');
+} else {
+  if (items.length < 2) carousel.classList.add('single');
+  const step = () => items[0].offsetWidth + 22;
+  const dots = carousel.querySelector('.dots');
+  items.forEach(() => dots.appendChild(document.createElement('i')));
+  const updateDots = () => {
+    const i = Math.round(track.scrollLeft / step());
+    [...dots.children].forEach((d, j) => d.classList.toggle('on', j === i));
+  };
+  track.addEventListener('scroll', updateDots, { passive: true });
+  updateDots();
+  carousel.querySelectorAll('.arrow').forEach(b => b.addEventListener('click', () =>
+    track.scrollBy({ left: +b.dataset.dir * step(), behavior: reduced ? 'auto' : 'smooth' })));
+}
 
 // FAQ : une seule réponse ouverte à la fois
-const faqs = document.querySelectorAll('.chat details');
-faqs.forEach(d => d.addEventListener('toggle', () => { if (d.open) faqs.forEach(o => o !== d && (o.open = false)); }));
+chatItems.forEach(d => d.addEventListener('toggle', () => { if (d.open) chatItems.forEach(o => o !== d && (o.open = false)); }));
 
 // Boutons : le remplissage part du point d'entrée de la souris et se referme vers le point de sortie
 function setOrigin(btn, e) {
