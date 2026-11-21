@@ -20,7 +20,7 @@ img,svg{display:block}
 .center{text-align:center}
 
 /* Buttons */
-.btn{--mx:0px;--my:0px;--lift:0px;--press:1;position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:15px;line-height:1.2;letter-spacing:-.005em;text-decoration:none;padding:13px 22px;min-height:44px;border:0;border-radius:999px;touch-action:manipulation;transform:translate(var(--mx),calc(var(--my) + var(--lift))) scale(var(--press));transition:transform .2s var(--ease-out),color .2s ease}
+.btn{--press:1;position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:15px;line-height:1.2;letter-spacing:-.005em;text-decoration:none;padding:13px 22px;min-height:44px;border:0;border-radius:999px;touch-action:manipulation;transform:scale(var(--press));transition:transform .2s var(--ease-out),color .2s ease}
 .btn.btn:active{--press:.97;transition-duration:.1s}
 .btn-lime{background:var(--lime);color:var(--ink)}
 @media (hover:hover) and (pointer:fine){.arrow:hover{background:var(--lime);color:var(--ink)}.nav nav a:hover{color:var(--blue)}.chat summary:hover{background:#e8eaff}}
@@ -219,7 +219,7 @@ img,svg{display:block}
 .copy{position:absolute;left:24px;bottom:14px;font-size:13px}.made{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;font-size:12px;letter-spacing:.1em;opacity:.8}
 
 /* Reveal */
-@media (prefers-reduced-motion:reduce){html[data-hover] .btn{--mx:0px!important;--my:0px!important;--lift:0px!important}html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.2s!important;animation-iteration-count:1!important;transition-property:opacity,color,background-color!important;transition-duration:.2s!important}@keyframes rise{from{opacity:0}}@keyframes mascotIn{from{opacity:0}}@keyframes stickerIn{from{opacity:0}to{opacity:1;transform:rotate(-4deg)}}@keyframes bubbleIn{from{opacity:0}}@keyframes ring{to{transform:none}}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.2s!important;animation-iteration-count:1!important;transition-property:opacity,color,background-color,clip-path!important;transition-duration:.2s!important}@keyframes rise{from{opacity:0}}@keyframes mascotIn{from{opacity:0}}@keyframes stickerIn{from{opacity:0}to{opacity:1;transform:rotate(-4deg)}}@keyframes bubbleIn{from{opacity:0}}@keyframes ring{to{transform:none}}}
 
 
 /* zedzed : finitions */
@@ -262,37 +262,14 @@ p{text-wrap:pretty}
 .peek.in{transform:translateX(0) rotate(-4deg)}
 @media (prefers-reduced-motion:reduce){.peek{transform:translateX(0) rotate(-4deg)}}
 
-/* Survol des boutons : variantes à comparer (html[data-hover]) */
-.btn::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--fill,var(--navy));transform:scaleX(0);transform-origin:right;transition:transform .28s var(--ease-out)}
-.btn::after{content:"";position:absolute;inset:0;z-index:-2;border-radius:inherit;box-shadow:0 2px 4px rgba(10,16,70,.18),0 10px 24px rgba(10,16,70,.28);opacity:0;transition:opacity .2s ease}
-.btn-label{position:relative;display:inline-block;overflow:hidden;vertical-align:top}
-.btn-label .t{display:block;transition:transform .28s var(--ease-out)}
-.btn-label .t::after{content:attr(data-text);position:absolute;left:0;top:100%;white-space:nowrap}
-.btn-arrow{position:absolute;right:12px;top:50%;width:16px;height:16px;margin-top:-8px;opacity:0;transform:translateX(-6px);transition:opacity .2s ease,transform .25s var(--ease-out)}
-.btn-arrow path{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.btn-label{transition:transform .25s var(--ease-out)}
+/* Survol des boutons : remplissage circulaire depuis l'entrée de la souris */
+.btn::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--fill,var(--navy));clip-path:circle(0px at var(--x,50%) var(--y,50%));transition:clip-path .22s var(--ease-out)}
 .navy .btn,.p-dark .btn,.footer .btn{--fill:#fff}
 @media (hover:hover) and (pointer:fine){
-  html[data-hover="lift"] .btn:hover{--lift:-3px}
-  html[data-hover="lift"] .btn:hover::after{opacity:1}
-  html[data-hover="fill"] .btn:hover{color:#fff}
-  html[data-hover="fill"] :is(.navy,.p-dark,.footer) .btn:hover{color:var(--navy)}
-  html[data-hover="fill"] .btn:hover::before{transform:scaleX(1);transform-origin:left}
-  html[data-hover="roll"] .btn:hover .btn-label .t{transform:translateY(-100%)}
-  html[data-hover="arrow"] .btn:hover .btn-label{transform:translateX(-12px)}
-  html[data-hover="arrow"] .btn:hover .btn-arrow{opacity:1;transform:none}
-  html[data-hover="magnet"] .btn{transition:transform .35s var(--ease-out),color .2s ease}
+  .btn:hover{color:#fff;transition:transform .2s var(--ease-out),color .18s ease .04s}
+  :is(.navy,.p-dark,.footer) .btn:hover{color:var(--navy)}
+  .btn:hover::before{clip-path:circle(var(--r,160px) at var(--x,50%) var(--y,50%));transition-duration:.35s}
 }
-.hover-picker{position:fixed;left:max(16px, env(safe-area-inset-left, 0px));bottom:calc(16px + env(safe-area-inset-bottom, 0px));z-index:90;background:#fff;color:var(--ink);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow-lg);font-size:13px;max-width:calc(100vw - 32px)}
-.hover-picker legend{font-weight:700;padding:0;margin-bottom:8px}
-.hover-picker fieldset{border:0;margin:0;padding:0}
-.hover-picker .opts{display:flex;flex-wrap:wrap;gap:6px}
-.hover-picker label{position:relative;cursor:pointer}
-.hover-picker input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
-.hover-picker span{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;background:var(--light);font-weight:600;transition:background-color .15s ease,color .15s ease}
-.hover-picker input:checked + span{background:var(--navy);color:#fff}
-.hover-picker input:focus-visible + span{outline:3px solid var(--blue);outline-offset:2px}
-.hover-picker small{display:block;margin-top:8px;color:var(--muted)}
 
 /* Cibles >= 24 px partout */
 .foot-links a,.mail,.paper > a{display:inline-block;padding-block:3px}
@@ -332,4 +309,3 @@ p{text-wrap:pretty}
   .sky{background-position:-70px center,calc(100% + 70px) center}
 }
 
-@media (hover:none){.hover-picker{display:none}}
