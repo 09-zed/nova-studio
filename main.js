@@ -53,6 +53,10 @@ const io = new IntersectionObserver(entries => entries.forEach(en => {
 }), { threshold: 0.15 });
 document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = (i % 4) * 60 + 'ms'; io.observe(el); });
 
+// Tête qui surgit du bord quand la zone d'appel arrive
+const peek = document.querySelector('.peek');
+if (peek) new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting) { peek.classList.add('in'); o.disconnect(); } }), { threshold: .6 }).observe(document.querySelector('.call'));
+
 // Carrousel vidéos
 const track = document.querySelector('.track');
 const items = [...track.children];
