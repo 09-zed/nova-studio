@@ -36,7 +36,7 @@ addEventListener('scroll', () => {
   links.forEach((a, i) => a.classList.toggle('active', i === cur));
 }, { passive: true });
 
-// Apparition au scroll + compteurs
+// Compteurs
 const fmt = (n, dec) => n.toLocaleString('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 function count(el) {
   const target = parseFloat(el.dataset.count), suffix = (el.dataset.suffix || '').replace(' ', '\u00a0');
@@ -50,13 +50,12 @@ function count(el) {
   };
   requestAnimationFrame(step);
 }
-const io = new IntersectionObserver(entries => entries.forEach(en => {
-  if (!en.isIntersecting) return;
-  en.target.classList.add('in');
-  en.target.querySelectorAll('[data-count]').forEach(count);
-  io.unobserve(en.target);
-}), { threshold: 0.15 });
-document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = [0, 50, 90, 120][i % 4] + 'ms'; io.observe(el); });
+// Les chiffres comptent une seule fois quand la grille arrive à l'écran (valeurs finales déjà dans le HTML)
+const stats = document.querySelector('.stats');
+if (stats) new IntersectionObserver((es, o) => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  stats.querySelectorAll('[data-count]').forEach(count); o.disconnect();
+}), { threshold: 0.3 }).observe(stats);
 
 // Tête qui surgit du bord quand la zone d'appel arrive
 const peek = document.querySelector('.peek');
