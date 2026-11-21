@@ -1,8 +1,27 @@
-// Loader
-window.addEventListener('load', () => setTimeout(() => document.getElementById('loader').classList.add('done'), 900));
+const nav = document.getElementById('nav');
+// Loader puis entrée du hero (le seul moment orchestré)
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let started = false;
+function start() {
+  if (started) return; started = true;
+  document.getElementById('loader').classList.add('done');
+  document.documentElement.classList.add('ready');
+}
+addEventListener('load', () => setTimeout(start, reduced ? 0 : 250));
+setTimeout(start, 2500); // filet de sécurité si une ressource traîne
+
+// Menu mobile
+const menuBtn = document.getElementById('menuBtn');
+function setMenu(open) {
+  nav.classList.toggle('open', open);
+  menuBtn.setAttribute('aria-expanded', open);
+  menuBtn.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
+}
+menuBtn.addEventListener('click', () => setMenu(!nav.classList.contains('open')));
+document.querySelectorAll('#mainNav a').forEach(a => a.addEventListener('click', () => setMenu(false)));
+addEventListener('keydown', e => { if (e.key === 'Escape' && nav.classList.contains('open')) { setMenu(false); menuBtn.focus(); } });
 
 // Nav au scroll + lien actif
-const nav = document.getElementById('nav');
 const links = [...document.querySelectorAll('.nav nav a')];
 const sections = links.map(a => document.querySelector(a.getAttribute('href')));
 addEventListener('scroll', () => {
@@ -15,9 +34,10 @@ addEventListener('scroll', () => {
 // Apparition au scroll + compteurs
 const fmt = (n, dec) => n.toLocaleString('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 function count(el) {
-  const target = parseFloat(el.dataset.count), suffix = el.dataset.suffix || '';
+  const target = parseFloat(el.dataset.count), suffix = (el.dataset.suffix || '').replace(' ', '\u00a0');
   const dec = (el.dataset.count.split('.')[1] || '').length;
-  const t0 = performance.now(), dur = 1400;
+  if (reduced) { el.textContent = fmt(target, dec) + suffix; return; }
+  const t0 = performance.now(), dur = 1200;
   const step = t => {
     const p = Math.min((t - t0) / dur, 1), e = 1 - Math.pow(1 - p, 3);
     el.textContent = fmt(target * e, dec) + suffix;
@@ -31,7 +51,7 @@ const io = new IntersectionObserver(entries => entries.forEach(en => {
   en.target.querySelectorAll('[data-count]').forEach(count);
   io.unobserve(en.target);
 }), { threshold: 0.15 });
-document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = (i % 4) * 80 + 'ms'; io.observe(el); });
+document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = (i % 4) * 60 + 'ms'; io.observe(el); });
 
 // Carrousel vidéos
 const track = document.querySelector('.track');
