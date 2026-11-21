@@ -19,7 +19,12 @@ function setMenu(open) {
 }
 menuBtn.addEventListener('click', () => setMenu(!nav.classList.contains('open')));
 document.querySelectorAll('#mainNav a').forEach(a => a.addEventListener('click', () => setMenu(false)));
-addEventListener('keydown', e => { if (e.key === 'Escape' && nav.classList.contains('open')) { setMenu(false); menuBtn.focus(); } });
+addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || !nav.classList.contains('open')) return;
+  // Fermeture au clavier : instantanée (jamais d'animation sur une action clavier)
+  nav.classList.add('instant'); setMenu(false); menuBtn.focus();
+  requestAnimationFrame(() => requestAnimationFrame(() => nav.classList.remove('instant')));
+});
 
 // Nav au scroll + lien actif
 const links = [...document.querySelectorAll('.nav nav a')];
@@ -51,7 +56,7 @@ const io = new IntersectionObserver(entries => entries.forEach(en => {
   en.target.querySelectorAll('[data-count]').forEach(count);
   io.unobserve(en.target);
 }), { threshold: 0.15 });
-document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = (i % 4) * 60 + 'ms'; io.observe(el); });
+document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = [0, 50, 90, 120][i % 4] + 'ms'; io.observe(el); });
 
 // Tête qui surgit du bord quand la zone d'appel arrive
 const peek = document.querySelector('.peek');
@@ -69,7 +74,7 @@ const updateDots = () => {
 track.addEventListener('scroll', updateDots, { passive: true });
 updateDots();
 document.querySelectorAll('.arrow').forEach(b => b.addEventListener('click', () =>
-  track.scrollBy({ left: +b.dataset.dir * (items[0].offsetWidth + 22), behavior: 'smooth' })));
+  track.scrollBy({ left: +b.dataset.dir * (items[0].offsetWidth + 22), behavior: reduced ? 'auto' : 'smooth' })));
 
 // FAQ : une seule réponse ouverte à la fois
 const faqs = document.querySelectorAll('.chat details');
